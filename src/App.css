@@ -1,0 +1,44 @@
+.app-shell {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top, rgba(59, 130, 246, 0.22), transparent 30%),
+    linear-gradient(180deg, #0f172a 0%, #020617 100%);
+}
+
+.scene-frame {
+  width: 100%;
+  height: 100%;
+}
+
+.scene-frame canvas {
+  display: block;
+  touch-action: none;
+}
+
+.scene-overlay {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  max-width: min(320px, calc(100vw - 48px));
+  padding: 16px 18px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(10px);
+  color: #e2e8f0;
+}
+
+.scene-overlay h1 {
+  margin-bottom: 6px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.scene-overlay p {
+  color: #cbd5e1;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
