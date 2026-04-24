@@ -100,7 +100,7 @@ function App() {
       <div className="scene-frame" ref={mountRef} />
       <div className="scene-overlay">
         <h1>Isometric Tile Grid</h1>
-        <p>Chunk 40x40 com tiles interativos em camera ortografica isometrica.</p>
+        <p>Chunk 30x30 com tiles interativos em camera ortografica isometrica.</p>
       </div>
     </main>
   )

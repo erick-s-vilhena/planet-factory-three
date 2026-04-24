@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-export const GRID_SIZE = 40
+export const GRID_SIZE = 30
 export const TILE_SIZE = 1
 export const TILE_HEIGHT = 0.22
 export const UNLOCKED_RADIUS = 10
