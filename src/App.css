@@ -42,3 +42,38 @@
   font-size: 0.92rem;
   line-height: 1.4;
 }
+
+.fullscreen-button {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 2;
+  padding: 10px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.82);
+  color: #e2e8f0;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease;
+}
+
+.fullscreen-button:hover {
+  background: rgba(30, 41, 59, 0.92);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+.fullscreen-button:active {
+  transform: translateY(1px);
+}
+
+@media (hover: none), (pointer: coarse), (max-width: 768px) {
+  .fullscreen-button {
+    display: none;
+  }
+}

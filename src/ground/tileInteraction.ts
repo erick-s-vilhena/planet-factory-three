@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import type { TileMesh } from './createGround'
+import type { TileGrid } from './createGround'
 
 type TileInteraction = {
   attach: () => void
@@ -9,50 +9,38 @@ type TileInteraction = {
 export function createTileInteraction(
   renderer: THREE.WebGLRenderer,
   camera: THREE.Camera,
-  tiles: TileMesh[],
+  tileGrid: TileGrid,
   isPanning: () => boolean,
   consumeSelectionBlock: () => boolean,
 ): TileInteraction {
   const raycaster = new THREE.Raycaster()
   const pointer = new THREE.Vector2()
 
-  let hoveredTile: TileMesh | null = null
-  let selectedTile: TileMesh | null = null
-
-  const applyTileState = (tile: TileMesh) => {
-    if (tile === selectedTile) {
-      tile.material.color.set('#f8fafc')
-      tile.material.emissive.set('#fde68a')
-      tile.material.emissiveIntensity = 0.5
-      return
-    }
-
-    if (tile === hoveredTile) {
-      tile.material.color.set('#d9f3ff')
-      tile.material.emissive.set('#7dd3fc')
-      tile.material.emissiveIntensity = 0.2
-      return
-    }
-
-    tile.material.color.set(tile.userData.baseColor)
-    tile.material.emissive.set('#000000')
-    tile.material.emissiveIntensity = 0
-  }
+  let hoveredTileId: number | null = null
+  let selectedTileId: number | null = null
 
   const refreshTiles = () => {
-    tiles.forEach((tile) => applyTileState(tile))
+    const hoverTarget = hoveredTileId === selectedTileId ? null : hoveredTileId
+    tileGrid.setHoveredTile(hoverTarget)
+    tileGrid.setSelectedTile(selectedTileId)
   }
 
-  const pickTile = (event: PointerEvent) => {
+  const pickTileId = (event: PointerEvent) => {
     const rect = renderer.domElement.getBoundingClientRect()
     pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
     pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
 
     raycaster.setFromCamera(pointer, camera)
-    const hit = raycaster.intersectObjects(tiles, false)
-      .find((intersection) => (intersection.object as TileMesh).userData.isUnlocked)
+    const hit = raycaster.intersectObject(tileGrid.mesh, false)
+      .find((intersection) => {
+        if (intersection.instanceId == null) {
+          return false
+        }
 
-    return (hit?.object as TileMesh | undefined) ?? null
+        return tileGrid.tiles[intersection.instanceId].isUnlocked
+      })
+
+    return hit?.instanceId ?? null
   }
 
   const handlePointerMove = (event: PointerEvent) => {
@@ -64,22 +52,22 @@ export function createTileInteraction(
       return
     }
 
-    const nextHoveredTile = pickTile(event)
+    const nextHoveredTileId = pickTileId(event)
 
-    if (hoveredTile === nextHoveredTile) {
+    if (hoveredTileId === nextHoveredTileId) {
       return
     }
 
-    hoveredTile = nextHoveredTile
+    hoveredTileId = nextHoveredTileId
     refreshTiles()
   }
 
   const handlePointerLeave = () => {
-    if (!hoveredTile) {
+    if (hoveredTileId == null) {
       return
     }
 
-    hoveredTile = null
+    hoveredTileId = null
     refreshTiles()
   }
 
@@ -92,7 +80,7 @@ export function createTileInteraction(
       return
     }
 
-    selectedTile = pickTile(event)
+    selectedTileId = pickTileId(event)
     refreshTiles()
   }
 

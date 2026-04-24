@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { createIsometricCamera } from './camera/createIsometricCamera'
 import { createGround, GRID_SIZE } from './ground/createGround'
@@ -7,6 +7,19 @@ import './App.css'
 
 function App() {
   const mountRef = useRef<HTMLDivElement | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  useEffect(() => {
+    const syncFullscreenState = () => {
+      setIsFullscreen(document.fullscreenElement !== null)
+    }
+
+    document.addEventListener('fullscreenchange', syncFullscreenState)
+
+    return () => {
+      document.removeEventListener('fullscreenchange', syncFullscreenState)
+    }
+  }, [])
 
   useEffect(() => {
     const mount = mountRef.current
@@ -44,7 +57,7 @@ function App() {
     const tileInteraction = createTileInteraction(
       renderer,
       camera,
-      ground.tiles,
+      ground.tileGrid,
       isPanning,
       consumeSelectionBlock,
     )
@@ -95,6 +108,25 @@ function App() {
     }
   }, [])
 
+  const handleFullscreenToggle = async () => {
+    const appShell = mountRef.current?.closest('.app-shell') as HTMLElement | null
+
+    if (!appShell) {
+      return
+    }
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen()
+        return
+      }
+
+      await appShell.requestFullscreen()
+    } catch (error) {
+      console.error('Falha ao alternar o modo de tela cheia:', error)
+    }
+  }
+
   return (
     <main className="app-shell">
       <div className="scene-frame" ref={mountRef} />
@@ -102,6 +134,13 @@ function App() {
         <h1>Isometric Tile Grid</h1>
         <p>Chunk 30x30 com tiles interativos em camera ortografica isometrica.</p>
       </div>
+      <button
+        className="fullscreen-button"
+        type="button"
+        onClick={handleFullscreenToggle}
+      >
+        {isFullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
+      </button>
     </main>
   )
 }
