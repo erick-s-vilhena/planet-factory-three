@@ -35,7 +35,24 @@ export function createIsometricCamera(
     visibleTiles: () => visibleTiles,
   })
 
-  const { attachZoom, detachZoom } = createCameraZoom({
+  let isZoomGestureActive = false
+
+  const {
+    isPanning,
+    panByScreenDelta,
+    consumeSelectionBlock: consumePanSelectionBlock,
+    attachPan,
+    detachPan,
+  } = createCameraMovement({
+    camera,
+    mount,
+    renderer,
+    target: chunkCenter,
+    updateViewport,
+    isZooming: () => isZoomGestureActive,
+  })
+
+  const zoomController = createCameraZoom({
     renderer,
     maxVisibleTiles,
     getVisibleTiles: () => visibleTiles,
@@ -43,24 +60,22 @@ export function createIsometricCamera(
       visibleTiles = value
     },
     updateViewport,
-  })
-
-  const { isPanning, consumeSelectionBlock, attachPan, detachPan } = createCameraMovement({
-    camera,
-    mount,
-    renderer,
-    target: chunkCenter,
-    updateViewport,
+    panByScreenDelta,
+    onZoomGestureChange: (active: boolean) => {
+      isZoomGestureActive = active
+    },
   })
 
   return {
     camera,
     updateViewport,
     isPanning,
-    consumeSelectionBlock,
+    consumeSelectionBlock: () => (
+      consumePanSelectionBlock() || zoomController.consumeSelectionBlock()
+    ),
     attachPan,
     detachPan,
-    attachZoom,
-    detachZoom,
+    attachZoom: zoomController.attachZoom,
+    detachZoom: zoomController.detachZoom,
   }
 }

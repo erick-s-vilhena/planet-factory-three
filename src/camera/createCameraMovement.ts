@@ -6,6 +6,7 @@ type CreateCameraMovementParams = {
   renderer: THREE.WebGLRenderer
   target: THREE.Vector3
   updateViewport: () => void
+  isZooming: () => boolean
 }
 
 export function createCameraMovement({
@@ -14,6 +15,7 @@ export function createCameraMovement({
   renderer,
   target,
   updateViewport,
+  isZooming,
 }: CreateCameraMovementParams) {
   const worldUp = new THREE.Vector3(0, 1, 0)
   const cameraRight = new THREE.Vector3()
@@ -21,6 +23,7 @@ export function createCameraMovement({
   const horizontalPan = new THREE.Vector3()
   const verticalPan = new THREE.Vector3()
   const panOffset = new THREE.Vector3()
+  const cameraForward = new THREE.Vector3()
   const DRAG_THRESHOLD = 4
 
   let isPanning = false
@@ -30,6 +33,7 @@ export function createCameraMovement({
   let lastPointerY = 0
   let dragStartX = 0
   let dragStartY = 0
+  const activeTouchPointers = new Set<number>()
 
   const panCamera = (deltaX: number, deltaY: number) => {
     const viewportWidth = Math.max(1, mount.clientWidth)
@@ -39,15 +43,23 @@ export function createCameraMovement({
     const worldPerPixelX = frustumWidth / viewportWidth
     const worldPerPixelY = frustumHeight / viewportHeight
 
-    camera.matrixWorld.extractBasis(cameraRight, cameraUp, new THREE.Vector3())
+    camera.matrixWorld.extractBasis(cameraRight, cameraUp, cameraForward)
 
     horizontalPan.copy(cameraRight).setY(0).normalize()
-    verticalPan.copy(cameraUp).projectOnPlane(worldUp).normalize()
+    verticalPan.copy(cameraUp).projectOnPlane(worldUp)
+
+    const verticalProjectionLength = verticalPan.length()
+
+    if (verticalProjectionLength === 0) {
+      return
+    }
+
+    verticalPan.normalize()
 
     panOffset
       .copy(horizontalPan)
       .multiplyScalar(-deltaX * worldPerPixelX)
-      .addScaledVector(verticalPan, deltaY * worldPerPixelY)
+      .addScaledVector(verticalPan, (deltaY * worldPerPixelY) / verticalProjectionLength)
 
     target.add(panOffset)
     updateViewport()
@@ -56,6 +68,15 @@ export function createCameraMovement({
   const handlePointerDown = (event: PointerEvent) => {
     if (event.pointerType === 'mouse' && event.button !== 0) {
       return
+    }
+
+    if (event.pointerType === 'touch') {
+      activeTouchPointers.add(event.pointerId)
+
+      if (activeTouchPointers.size !== 1 || isZooming()) {
+        stopPanning(event)
+        return
+      }
     }
 
     event.preventDefault()
@@ -76,6 +97,11 @@ export function createCameraMovement({
       return
     }
 
+    if (event.pointerType === 'touch' && (activeTouchPointers.size !== 1 || isZooming())) {
+      stopPanning(event)
+      return
+    }
+
     const deltaX = event.clientX - lastPointerX
     const deltaY = event.clientY - lastPointerY
 
@@ -91,6 +117,10 @@ export function createCameraMovement({
   }
 
   const stopPanning = (event?: PointerEvent) => {
+    if (event?.pointerType === 'touch') {
+      activeTouchPointers.delete(event.pointerId)
+    }
+
     if (!isPanning) {
       return
     }
@@ -106,6 +136,10 @@ export function createCameraMovement({
 
   return {
     isPanning: () => isPanning,
+    panByScreenDelta: (deltaX: number, deltaY: number) => {
+      shouldBlockSelection = true
+      panCamera(deltaX, deltaY)
+    },
     consumeSelectionBlock: () => {
       const blocked = shouldBlockSelection
       shouldBlockSelection = false
@@ -115,15 +149,15 @@ export function createCameraMovement({
       renderer.domElement.addEventListener('pointerdown', handlePointerDown)
       renderer.domElement.addEventListener('pointermove', handlePointerMove)
       renderer.domElement.addEventListener('pointerup', stopPanning)
-      renderer.domElement.addEventListener('pointerleave', stopPanning)
       renderer.domElement.addEventListener('pointercancel', stopPanning)
+      renderer.domElement.addEventListener('pointerleave', stopPanning)
     },
     detachPan: () => {
       renderer.domElement.removeEventListener('pointerdown', handlePointerDown)
       renderer.domElement.removeEventListener('pointermove', handlePointerMove)
       renderer.domElement.removeEventListener('pointerup', stopPanning)
-      renderer.domElement.removeEventListener('pointerleave', stopPanning)
       renderer.domElement.removeEventListener('pointercancel', stopPanning)
+      renderer.domElement.removeEventListener('pointerleave', stopPanning)
       renderer.domElement.style.cursor = ''
     },
   }
