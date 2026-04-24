@@ -1,0 +1,19 @@
+{
+  "name": "Planet Factory",
+  "short_name": "PlanetFactory",
+  "description": "Mapa isometrico interativo de Planet Factory com exploracao por tiles.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "48x46",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

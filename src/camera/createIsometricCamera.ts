@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { MIN_VISIBLE_TILES } from './cameraConstants'
+import { MAX_VISIBLE_TILES, MIN_VISIBLE_TILES } from './cameraConstants'
 import { createCameraMovement } from './createCameraMovement'
 import { createCameraZoom } from './createCameraZoom'
 import { createIsometricPerspective } from './createIsometricPerspective'
@@ -22,7 +22,7 @@ export function createIsometricCamera(
 ): IsometricCameraController {
   const camera = new THREE.OrthographicCamera()
   const chunkCenter = new THREE.Vector3(0, 0, 0)
-  const maxVisibleTiles = gridSize
+  const maxVisibleTiles = Math.min(gridSize, MAX_VISIBLE_TILES)
 
   let visibleTiles = MIN_VISIBLE_TILES
 

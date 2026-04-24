@@ -49,7 +49,8 @@ export function createTileInteraction(
     pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
 
     raycaster.setFromCamera(pointer, camera)
-    const hit = raycaster.intersectObjects(tiles, false)[0]
+    const hit = raycaster.intersectObjects(tiles, false)
+      .find((intersection) => (intersection.object as TileMesh).userData.isUnlocked)
 
     return (hit?.object as TileMesh | undefined) ?? null
   }
